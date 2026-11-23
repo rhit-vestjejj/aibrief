@@ -7,7 +7,7 @@
       "feeds": [
         {
           "name": "Simon Willison",
-          "url": "https://simonwillison.net/atom/everything/"
+          "url": "https://simonwillison.net/tags/ai.atom"
         },
         {
           "name": "Hacker News (AI, 150+ pts)",
