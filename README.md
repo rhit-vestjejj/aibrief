@@ -1,6 +1,6 @@
 # AI Brief
 
-A personal morning AI reader for iPhone. Every morning, a GitHub Action pulls your feeds, optionally writes a Claude summary, and publishes a page you open like an app from your home screen.
+A personal morning reader for iPhone, with tabs for **AI · Markets · Tech · News · Long reads**. Every morning, a GitHub Action pulls your feeds, optionally writes a short Claude summary for each tab, and publishes a page you open like an app from your home screen.
 
 ```
 GitHub Action (daily cron) → build.py → fetch feeds → [Claude summary] → site/index.html → GitHub Pages → iPhone home screen
@@ -16,9 +16,9 @@ GitHub Action (daily cron) → build.py → fetch feeds → [Claude summary] →
 
 | File | What it does |
 |---|---|
-| `feeds.json` | Your sources, sections, and how far back each section looks. **Edit this to customize.** |
-| `build.py` | Fetches feeds, calls Claude (optional), renders the page, sends the push (optional). |
-| `template.html` | The page design: dark/light mode, read tracking, "Hide read", "Mark read". |
+| `feeds.json` | Your tabs, each with its sections, sources, quick links, and a `focus` line that steers its AI summary. **Edit this to customize.** |
+| `build.py` | Fetches feeds, calls Claude once per tab (optional), renders the page, sends the push (optional). |
+| `template.html` | The page design: tab bar with unread counts, dark/light mode, read tracking, "Hide read", "Mark read". |
 | `site/` | App shell: manifest, icons, offline support. `index.html` here is a sample and gets rebuilt every run. |
 | `.github/workflows/daily.yml` | Runs the build daily at 11:00 UTC (5 AM CST / 6 AM CDT) and deploys it. |
 
@@ -78,7 +78,9 @@ Trigger it any of these ways:
 
 ## Customizing
 
-- **Add a source:** add `{"name": "...", "url": "<rss feed url>"}` to a section in `feeds.json`. For most sites, `<site>/feed` or `<site>/rss` works. Substack sites always use `/feed`.
+- **Add a source:** add `{"name": "...", "url": "<rss feed url>"}` to a section in `feeds.json`. For most sites, `<site>/feed` or `<site>/rss` works. Substack sites always use `/feed`, but `*.substack.com` addresses may be blocked from GitHub's servers, so prefer a custom domain if the newsletter has one.
+- **Add or reorder tabs:** add an object to `tabs` in `feeds.json` with `name`, `focus`, `sections`, and `links`. Order in the file is the order on screen.
+- **Open a specific tab:** add `#` plus the tab name in lowercase with dashes, e.g. `…/aibrief/#news` or `…/aibrief/#long-reads`. This is handy in an iPhone Shortcut.
 - **Email-only newsletters:** use kill-the-newsletter.com to turn them into a feed URL.
 - **Change the time:** edit the `cron` line in `daily.yml`. It's in UTC.
 - **Too much or too little:** change `days` or `max_per_feed` for a section.
@@ -88,6 +90,7 @@ If a feed fails, the rest still build, and the failure is listed at the bottom o
 
 ## Notes
 
-- Read tracking is stored on your phone only (Safari local storage).
+- Read tracking and your last-opened tab are stored on your phone only (Safari local storage).
+- AP News and Reuters have no public feeds, so they're quick links on the News tab.
 - AI Snake Oil was renamed **AI as Normal Technology**. The feed in `feeds.json` already points to the new address.
 - Epoch AI, GovAI, Anthropic, Lawfare, and the others under "Check-ins" had no verified feed, so they're quick links instead.

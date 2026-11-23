@@ -85,9 +85,9 @@ def parse_feed(raw):
     return items
 
 
-def collect(config):
+def collect(section_configs):
     sections, errors = [], []
-    for sec in config["sections"]:
+    for sec in section_configs:
         cutoff = NOW - dt.timedelta(days=sec["days"])
         items = []
         for f in sec["feeds"]:
@@ -109,7 +109,7 @@ def collect(config):
 
 # ---------- optional AI summary ----------
 
-def summarize(sections):
+def summarize(name, focus, sections):
     key = os.environ.get("ANTHROPIC_API_KEY")
     if not key:
         return None
@@ -119,9 +119,8 @@ def summarize(sections):
     if not pool:
         return None
     prompt = (
-        "You are writing a 2-minute morning AI brief for a reader who already knows "
-        "ML theory deeply. Skip basics. Focus on what changed: usage, industry, policy, "
-        "economics, compute, and practical engineering.\n\n"
+        f"You are writing a 2-minute morning brief for the \"{name}\" tab of a personal "
+        f"news reader. {focus or 'Focus on what is new and important.'}\n\n"
         "Return ONLY JSON: {\"headline\": str (<=12 words), \"bullets\": [3-5 strings, "
         "each <=30 words], \"must_read\": {\"title\": str, \"url\": str, \"why\": str (<=25 words)}}. "
         "must_read must be one of the provided URLs.\n\nItems:\n" + json.dumps(pool)
@@ -149,16 +148,17 @@ def summarize(sections):
             data.pop("must_read", None)
         return data
     except Exception as ex:
-        print(f"WARN summary failed: {ex}", file=sys.stderr)
+        print(f"WARN {name} summary failed: {ex}", file=sys.stderr)
         return None
 
 
-def notify(summary, total):
+def notify(tabs, total):
     topic = os.environ.get("NTFY_TOPIC")
     if not topic:
         return
-    title = (summary or {}).get("headline") or f"AI Brief: {total} new items"
-    msg = "\n".join("• " + b for b in (summary or {}).get("bullets", [])[:3]) or "Tap to open."
+    title = f"AI Brief: {total} new items"
+    msg = "\n".join(f"• {t['name']}: {t['summary']['headline']}" for t in tabs
+                    if (t["summary"] or {}).get("headline")) or f"{total} new items. Tap to open."
     req = urllib.request.Request(
         f"https://ntfy.sh/{topic}", data=msg.encode(), method="POST",
         headers={"Title": title.encode("utf-8").decode("latin-1", "ignore"),
@@ -174,18 +174,26 @@ def notify(summary, total):
 E = html.escape
 
 
-def render(sections, links, summary, errors):
-    total = sum(len(s["items"]) for s in sections)
-    parts = []
+def slug(name, taken):
+    base = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "tab"
+    s, n = base, 2
+    while s in taken:
+        s, n = f"{base}-{n}", n + 1
+    taken.add(s)
+    return s
+
+
+def render_tab(tab):
+    summary, parts = tab["summary"], []
     if summary:
         bl = "".join(f"<li>{E(b)}</li>" for b in summary.get("bullets", []))
         mr = summary.get("must_read")
         mr_html = (f'<a class="must" href="{E(mr["url"])}" target="_blank" rel="noopener">'
                    f'<span class="lbl">Read in full</span><strong>{E(mr["title"])}</strong>'
                    f'<span>{E(mr.get("why", ""))}</span></a>') if mr else ""
-        parts.append(f'<section class="card summary"><h2>{E(summary.get("headline", "Today in AI"))}</h2>'
+        parts.append(f'<section class="card summary"><h2>{E(summary.get("headline", "Today in " + tab["name"]))}</h2>'
                      f'<ul>{bl}</ul>{mr_html}</section>')
-    for s in sections:
+    for s in tab["sections"]:
         rows = "".join(
             f'<li class="item" data-id="{i["id"]}"><a href="{E(i["url"])}" target="_blank" rel="noopener">'
             f'<span class="meta"><span class="src">{E(i["source"])}</span>'
@@ -194,26 +202,55 @@ def render(sections, links, summary, errors):
             for i in s["items"]) or '<li class="empty">Nothing new.</li>'
         parts.append(f'<section class="sec"><div class="sec-head"><h2>{E(s["name"])}</h2>'
                      f'<button class="mark" type="button">Mark read</button></div><ul>{rows}</ul></section>')
-    lk = "".join(f'<a class="chip" href="{E(l["url"])}" target="_blank" rel="noopener">{E(l["name"])}</a>'
-                 for l in links)
-    parts.append(f'<section class="sec"><div class="sec-head"><h2>Check-ins</h2></div><div class="chips">{lk}</div></section>')
+    if tab["links"]:
+        lk = "".join(f'<a class="chip" href="{E(l["url"])}" target="_blank" rel="noopener">{E(l["name"])}</a>'
+                     for l in tab["links"])
+        parts.append(f'<section class="sec"><div class="sec-head"><h2>Check-ins</h2></div><div class="chips">{lk}</div></section>')
+    return "\n".join(parts)
+
+
+def render(tabs, errors):
+    total = sum(len(s["items"]) for t in tabs for s in t["sections"])
+    nav = "".join(
+        f'<button class="tab" type="button" role="tab" id="t-{t["id"]}" data-tab="{t["id"]}" '
+        f'aria-controls="p-{t["id"]}" aria-selected="{"true" if i == 0 else "false"}">'
+        f'{E(t["name"])}<span class="n"></span></button>'
+        for i, t in enumerate(tabs))
+    panels = "\n".join(
+        f'<div class="panel" role="tabpanel" id="p-{t["id"]}" aria-labelledby="t-{t["id"]}"'
+        f'{"" if i == 0 else " hidden"}>\n{render_tab(t)}\n</div>'
+        for i, t in enumerate(tabs))
+    body = (f'<nav class="tabs" role="tablist">{nav}</nav>\n' if len(tabs) > 1 else "") + panels
     err = f'<p class="err">Could not load: {E(", ".join(errors))}</p>' if errors else ""
     tpl = (ROOT / "template.html").read_text()
-    return (tpl.replace("{{BODY}}", "\n".join(parts))
+    return (tpl.replace("{{BODY}}", body)
                .replace("{{UPDATED}}", NOW.isoformat())
                .replace("{{TOTAL}}", str(total))
                .replace("{{ERRORS}}", err))
 
 
+def load_tabs(config):
+    """Tabbed config, or the original single-page format (shown as one 'AI' tab)."""
+    if "tabs" in config:
+        return config["tabs"]
+    return [{"name": "AI", "sections": config["sections"], "links": config.get("links", [])}]
+
+
 def main():
     config = json.loads((ROOT / os.environ.get("FEEDS_FILE", "feeds.json")).read_text())
-    sections, errors = collect(config)
-    summary = summarize(sections)
+    tabs, errors, taken = [], [], set()
+    for t in load_tabs(config):
+        sections, errs = collect(t["sections"])
+        errors += errs
+        tabs.append({"name": t["name"], "id": slug(t["name"], taken), "sections": sections,
+                     "links": t.get("links", []),
+                     "summary": summarize(t["name"], t.get("focus", ""), sections)})
     OUT.mkdir(exist_ok=True)
-    (OUT / "index.html").write_text(render(sections, config.get("links", []), summary, errors))
-    notify(summary, sum(len(s["items"]) for s in sections))
-    print(f"Built site/index.html: {sum(len(s['items']) for s in sections)} items, "
-          f"summary={'yes' if summary else 'no'}, errors={len(errors)}")
+    (OUT / "index.html").write_text(render(tabs, errors))
+    total = sum(len(s["items"]) for t in tabs for s in t["sections"])
+    notify(tabs, total)
+    print(f"Built site/index.html: {len(tabs)} tabs, {total} items, "
+          f"summaries={sum(1 for t in tabs if t['summary'])}/{len(tabs)}, errors={len(errors)}")
 
 
 if __name__ == "__main__":

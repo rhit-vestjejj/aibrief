@@ -12,8 +12,8 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <style>
-:root{--bg:#f6f5f1;--card:#fff;--ink:#1d1d1b;--muted:#6b6a66;--line:#e4e2dc;--accent:#c4562f;--accent-soft:#f6e6df;--read:#a9a7a1}
-@media (prefers-color-scheme:dark){:root{--bg:#141413;--card:#1e1e1c;--ink:#ecebe6;--muted:#9a9891;--line:#2e2d2a;--accent:#e07a52;--accent-soft:#3a2519;--read:#5f5d58}}
+:root{--bg:#f6f5f1;--card:#fff;--ink:#1d1d1b;--muted:#6b6a66;--line:#e4e2dc;--accent:#c4562f;--accent-soft:#f6e6df;--read:#a9a7a1;--on-accent:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#141413;--card:#1e1e1c;--ink:#ecebe6;--muted:#9a9891;--line:#2e2d2a;--accent:#e07a52;--accent-soft:#3a2519;--read:#5f5d58;--on-accent:#141413}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;-webkit-text-size-adjust:100%}
 main{max-width:640px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 20px) 16px calc(env(safe-area-inset-bottom) + 40px)}
@@ -45,6 +45,13 @@ body.hide-read .item.read{display:none}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{padding:8px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--ink);text-decoration:none;font-size:14px}
 .err{font-size:12px;color:var(--muted)}
+body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg);z-index:3}
+.tabs{position:sticky;top:env(safe-area-inset-top);z-index:2;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;background:var(--bg);margin:-8px -16px 14px;padding:8px 16px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;font:inherit;font-size:14px;font-weight:500;color:var(--muted);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 13px;min-height:40px}
+.tab[aria-selected=true]{color:var(--on-accent);background:var(--accent);border-color:var(--accent)}
+.tab .n{margin-left:6px;font-size:12px;opacity:.75}
+.tab .n:empty{display:none}
 </style>
 </head>
 <body>
@@ -66,7 +73,20 @@ body.hide-read .item.read{display:none}
     if(m<60)return m+"m ago";var h=Math.round(m/60);if(h<48)return h+"h ago";return Math.round(h/24)+"d ago"}
   document.getElementById("when").textContent="Updated "+ago("{{UPDATED}}");
   document.querySelectorAll("time").forEach(function(t){t.textContent=ago(t.getAttribute("datetime"))});
-  function paint(){document.querySelectorAll(".item").forEach(function(li){li.classList.toggle("read",!!read[li.dataset.id])})}
+  var TAB="aibrief-tab", tabs=[].slice.call(document.querySelectorAll(".tab"));
+  function panel(b){return document.getElementById("p-"+b.dataset.tab)}
+  function show(id){
+    if(!tabs.length)return;
+    if(!tabs.some(function(b){return b.dataset.tab===id}))id=tabs[0].dataset.tab;
+    tabs.forEach(function(b){var on=b.dataset.tab===id;b.setAttribute("aria-selected",on);panel(b).hidden=!on});
+    save(TAB,id);
+  }
+  tabs.forEach(function(b){b.addEventListener("click",function(){
+    show(b.dataset.tab);try{history.replaceState(null,"","#"+b.dataset.tab)}catch(e){}window.scrollTo(0,0)})});
+  window.addEventListener("hashchange",function(){show(location.hash.slice(1))});
+  show(location.hash.slice(1)||load(TAB,""));
+  function badges(){tabs.forEach(function(b){var n=panel(b).querySelectorAll(".item:not(.read)").length;b.querySelector(".n").textContent=n||""})}
+  function paint(){document.querySelectorAll(".item").forEach(function(li){li.classList.toggle("read",!!read[li.dataset.id])});badges()}
   function mark(li){read[li.dataset.id]=Date.now()}
   document.querySelectorAll(".item a").forEach(function(a){a.addEventListener("click",function(){mark(a.parentNode);save(KEY,read);setTimeout(paint,300)})});
   document.querySelectorAll(".mark").forEach(function(b){b.addEventListener("click",function(){
