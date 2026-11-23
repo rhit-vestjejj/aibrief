@@ -2,7 +2,9 @@ name: Build AI Brief
 
 on:
   schedule:
-    - cron: "0 11 * * *"   # 11:00 UTC = 5 AM CST / 6 AM CDT. Change to suit you.
+    # GitHub often delays or drops runs at the top of the hour, so use odd minutes.
+    - cron: "40 10 * * *"   # main:   10:40 UTC = 4:40 AM CST / 5:40 AM CDT
+    - cron: "25 11 * * *"   # backup: 11:25 UTC = 5:25 AM CST / 6:25 AM CDT (skips if main ran)
   workflow_dispatch:        # lets you run it manually from the Actions tab
 
 permissions:
@@ -12,10 +14,33 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false  # runs wait for each other, so the backup sees the main run's result
 
 jobs:
+  check:
+    # The backup slot builds only if no scheduled run has succeeded yet today.
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    outputs:
+      build: ${{ steps.check.outputs.build }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          build=true
+          if [ "$GITHUB_EVENT_NAME" = schedule ]; then
+            done=$(gh run list -R "$GITHUB_REPOSITORY" -w daily.yml -e schedule -s success \
+                     --created ">=$(date -u +%F)" --json databaseId \
+                     --jq "map(select(.databaseId != $GITHUB_RUN_ID)) | length")
+            if [ "$done" -gt 0 ]; then build=false; echo "Today's brief already ran; skipping."; fi
+          fi
+          echo "build=$build" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: check
+    if: needs.check.outputs.build == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

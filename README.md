@@ -20,7 +20,7 @@ GitHub Action (daily cron) → build.py → fetch feeds → [Claude summary] →
 | `build.py` | Fetches feeds, calls Claude once per tab (optional), renders the page, sends the push (optional). |
 | `template.html` | The page design: tab bar with unread counts, dark/light mode, read tracking, "Hide read", "Mark read". |
 | `site/` | App shell: manifest, icons, offline support. `index.html` here is a sample and gets rebuilt every run. |
-| `.github/workflows/daily.yml` | Runs the build daily at 11:00 UTC (5 AM CST / 6 AM CDT) and deploys it. |
+| `.github/workflows/daily.yml` | Runs the build daily at 10:40 UTC (4:40 AM CST / 5:40 AM CDT), with a backup at 11:25 UTC that only runs if the first one was skipped by GitHub, and deploys it. |
 
 ---
 
@@ -82,7 +82,7 @@ Trigger it any of these ways:
 - **Add or reorder tabs:** add an object to `tabs` in `feeds.json` with `name`, `focus`, `sections`, and `links`. Order in the file is the order on screen.
 - **Open a specific tab:** add `#` plus the tab name in lowercase with dashes, e.g. `…/aibrief/#news` or `…/aibrief/#long-reads`. This is handy in an iPhone Shortcut.
 - **Email-only newsletters:** use kill-the-newsletter.com to turn them into a feed URL.
-- **Change the time:** edit the `cron` line in `daily.yml`. It's in UTC.
+- **Change the time:** edit the two `cron` lines in `daily.yml` (main and backup). They are in UTC. Avoid minute `0`: GitHub often delays or drops runs at the top of the hour.
 - **Too much or too little:** change `days` or `max_per_feed` for a section.
 - **Run locally:** `python3 build.py`, then open `site/index.html`.
 
