@@ -1,0 +1,104 @@
+{
+  "_note": "Edit to add/remove sources. 'days' = how far back a section looks; 'max_per_feed' caps posts per source (override per feed with \"max\").",
+  "sections": [
+    {
+      "name": "Daily",
+      "days": 2,
+      "feeds": [
+        {
+          "name": "Simon Willison",
+          "url": "https://simonwillison.net/atom/everything/"
+        },
+        {
+          "name": "Hacker News (AI, 150+ pts)",
+          "url": "https://hnrss.org/newest?q=AI&points=150"
+        }
+      ],
+      "max_per_feed": 10
+    },
+    {
+      "name": "Weekly",
+      "days": 7,
+      "feeds": [
+        {
+          "name": "Import AI",
+          "url": "https://importai.substack.com/feed"
+        },
+        {
+          "name": "One Useful Thing",
+          "url": "https://www.oneusefulthing.org/feed"
+        },
+        {
+          "name": "Latent Space",
+          "url": "https://www.latent.space/feed"
+        },
+        {
+          "name": "AI as Normal Technology",
+          "url": "https://www.normaltech.ai/feed"
+        }
+      ],
+      "max_per_feed": 3
+    },
+    {
+      "name": "Deep Dive",
+      "days": 30,
+      "feeds": [
+        {
+          "name": "METR",
+          "url": "https://metr.org/feed.xml"
+        },
+        {
+          "name": "Hamel Husain",
+          "url": "https://hamel.dev/index.xml"
+        },
+        {
+          "name": "Eugene Yan",
+          "url": "https://eugeneyan.com/rss/"
+        },
+        {
+          "name": "CSET",
+          "url": "https://cset.georgetown.edu/feed/"
+        },
+        {
+          "name": "OpenAI News",
+          "url": "https://openai.com/news/rss.xml"
+        }
+      ],
+      "max_per_feed": 3
+    }
+  ],
+  "links": [
+    {
+      "name": "LMArena leaderboard",
+      "url": "https://lmarena.ai/leaderboard"
+    },
+    {
+      "name": "Anthropic news",
+      "url": "https://www.anthropic.com/news"
+    },
+    {
+      "name": "Anthropic Economic Index",
+      "url": "https://www.anthropic.com/economic-index"
+    },
+    {
+      "name": "Epoch AI",
+      "url": "https://epoch.ai/"
+    },
+    {
+      "name": "GovAI research",
+      "url": "https://www.governance.ai/research"
+    },
+    {
+      "name": "Lawfare (AI)",
+      "url": "https://www.lawfaremedia.org/"
+    },
+    {
+      "name": "Stanford AI Index",
+      "url": "https://hai.stanford.edu/ai-index"
+    },
+    {
+      "name": "BlueDot Impact courses",
+      "url": "https://bluedot.org/"
+    }
+  ]
+}

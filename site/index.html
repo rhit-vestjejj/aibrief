@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI Brief</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AI Brief">
+<meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141413" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--ink:#1d1d1b;--muted:#6b6a66;--line:#e4e2dc;--accent:#c4562f;--accent-soft:#f6e6df;--read:#a9a7a1}
+@media (prefers-color-scheme:dark){:root{--bg:#141413;--card:#1e1e1c;--ink:#ecebe6;--muted:#9a9891;--line:#2e2d2a;--accent:#e07a52;--accent-soft:#3a2519;--read:#5f5d58}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;-webkit-text-size-adjust:100%}
+main{max-width:640px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 20px) 16px calc(env(safe-area-inset-bottom) + 40px)}
+header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px}
+h1{font-size:30px;letter-spacing:-.02em;margin:0}
+.sub{color:var(--muted);font-size:13px;margin-top:2px}
+.toggle{font:inherit;font-size:13px;color:var(--muted);background:none;border:1px solid var(--line);border-radius:999px;padding:6px 12px}
+.toggle[aria-pressed=true]{color:var(--accent);border-color:var(--accent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:22px}
+.summary h2{font-size:19px;margin:0 0 8px;letter-spacing:-.01em}
+.summary ul{margin:0;padding-left:18px}.summary li{margin:6px 0}
+.must{display:block;margin-top:14px;padding:12px;border-radius:12px;background:var(--accent-soft);color:var(--ink);text-decoration:none}
+.must .lbl{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--accent)}
+.must strong{display:block;margin:2px 0}.must span:last-child{font-size:14px;color:var(--muted)}
+.sec{margin-bottom:26px}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.sec h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0}
+.mark{font:inherit;font-size:13px;color:var(--accent);background:none;border:0;padding:4px 0}
+.sec ul{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.item+.item{border-top:1px solid var(--line)}
+.item a{display:block;padding:12px 14px;color:inherit;text-decoration:none;min-height:44px}
+.item a:active{background:var(--line)}
+.meta{display:flex;gap:8px;font-size:12px;color:var(--muted);margin-bottom:2px}
+.src{color:var(--accent);font-weight:600}
+.title{font-weight:500}
+.item.read .title,.item.read .src{color:var(--read);font-weight:400}
+body.hide-read .item.read{display:none}
+.empty{padding:14px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:8px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--ink);text-decoration:none;font-size:14px}
+.err{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div><h1>AI Brief</h1><div class="sub"><span id="when"></span> · 11 items</div></div>
+    <button class="toggle" id="hide" type="button" aria-pressed="false">Hide read</button>
+  </header>
+  <section class="card summary"><h2>Agents get longer leashes; policy catches up</h2><ul><li>Sample bullet one about a new eval result and why it matters in practice.</li><li>Sample bullet two on compute and data center power deals.</li><li>Sample bullet three on a policy development worth tracking.</li></ul><a class="must" href="https://latent.space/p/ainews-riemann-hypothesis-proved-twice-independently/" target="_blank" rel="noopener"><span class="lbl">Read in full</span><strong>[AINews] Riemann Hypothesis proved...twice independently</strong><span>Sample reason this is the one to read in full today.</span></a></section>
+<section class="sec"><div class="sec-head"><h2>Daily</h2><button class="mark" type="button">Mark read</button></div><ul><li class="item" data-id="0ceef4b235ec"><a href="https://simonwillison.net/2026/Nov/21/muru/" target="_blank" rel="noopener"><span class="meta"><span class="src">Simon Willison</span><time datetime="2026-11-21T23:56:28+00:00"></time></span><span class="title">Muru</span></a></li></ul></section>
+<section class="sec"><div class="sec-head"><h2>Weekly</h2><button class="mark" type="button">Mark read</button></div><ul><li class="item" data-id="45149ab56aed"><a href="https://latent.space/p/ainews-riemann-hypothesis-proved-twice-independently/" target="_blank" rel="noopener"><span class="meta"><span class="src">Latent Space</span><time datetime="2026-11-21T05:02:13+00:00"></time></span><span class="title">[AINews] Riemann Hypothesis proved...twice independently</span></a></li><li class="item" data-id="790fce6927eb"><a href="https://latent.space/p/formal-verification/" target="_blank" rel="noopener"><span class="meta"><span class="src">Latent Space</span><time datetime="2026-11-20T21:18:41+00:00"></time></span><span class="title">The War Against Slop and an Emerging Weapon to Fight it: Formal Verification</span></a></li><li class="item" data-id="862f2dd49595"><a href="https://importai.substack.com/p/import-ai-481-ai-sub-contractors" target="_blank" rel="noopener"><span class="meta"><span class="src">Import AI</span><time datetime="2026-11-16T14:01:15+00:00"></time></span><span class="title">Import AI 481: AI sub-contractors; a wet lab for AI; and subterfuge during development</span></a></li></ul></section>
+<section class="sec"><div class="sec-head"><h2>Deep Dive</h2><button class="mark" type="button">Mark read</button></div><ul><li class="item" data-id="de5cd1a6d51d"><a href="https://openai.com/index/perplexity-and-intelligence" target="_blank" rel="noopener"><span class="meta"><span class="src">OpenAI News</span><time datetime="2026-11-22T00:00:00+00:00"></time></span><span class="title">Perplexity and Intelligence</span></a></li><li class="item" data-id="3ea993db7e3c"><a href="https://openai.com/index/combatting-adversarial-distillation" target="_blank" rel="noopener"><span class="meta"><span class="src">OpenAI News</span><time datetime="2026-11-20T10:00:00+00:00"></time></span><span class="title">Combatting adversarial distillation</span></a></li><li class="item" data-id="d15c45643214"><a href="https://openai.com/business/customer-stories/hebbia" target="_blank" rel="noopener"><span class="meta"><span class="src">OpenAI News</span><time datetime="2026-11-20T00:00:00+00:00"></time></span><span class="title">Hebbia sees improvements in financial research with GPT-6 Astra</span></a></li><li class="item" data-id="2e27fa2e7bea"><a href="https://cset.georgetown.edu/article/the-data-is-the-target/" target="_blank" rel="noopener"><span class="meta"><span class="src">CSET</span><time datetime="2026-11-19T20:00:00+00:00"></time></span><span class="title">The Data Is the Target</span></a></li><li class="item" data-id="993eca38d8d7"><a href="https://cset.georgetown.edu/article/biodata-matters-for-the-genesis-mission/" target="_blank" rel="noopener"><span class="meta"><span class="src">CSET</span><time datetime="2026-11-19T15:17:27+00:00"></time></span><span class="title">Biodata Matters for the Genesis Mission</span></a></li><li class="item" data-id="a4ea85254a88"><a href="https://eugeneyan.com/writing/public-evals" target="_blank" rel="noopener"><span class="meta"><span class="src">Eugene Yan</span><time datetime="2026-11-19T00:00:00+00:00"></time></span><span class="title">How Public Evals Work and Fail, and What Should Change</span></a></li><li class="item" data-id="318a25edaf56"><a href="https://cset.georgetown.edu/article/georgetowns-jacob-feldgoise-on-u-s-agencies-investigation-into-megaspeed/" target="_blank" rel="noopener"><span class="meta"><span class="src">CSET</span><time datetime="2026-11-17T22:00:00+00:00"></time></span><span class="title">Georgetown’s Jacob Feldgoise on U.S. agencies’ investigation into Megaspeed</span></a></li></ul></section>
+<section class="sec"><div class="sec-head"><h2>Check-ins</h2></div><div class="chips"><a class="chip" href="https://lmarena.ai/leaderboard" target="_blank" rel="noopener">LMArena leaderboard</a><a class="chip" href="https://www.anthropic.com/news" target="_blank" rel="noopener">Anthropic news</a><a class="chip" href="https://www.anthropic.com/economic-index" target="_blank" rel="noopener">Anthropic Economic Index</a><a class="chip" href="https://epoch.ai/" target="_blank" rel="noopener">Epoch AI</a><a class="chip" href="https://www.governance.ai/research" target="_blank" rel="noopener">GovAI research</a><a class="chip" href="https://www.lawfaremedia.org/" target="_blank" rel="noopener">Lawfare (AI)</a><a class="chip" href="https://hai.stanford.edu/ai-index" target="_blank" rel="noopener">Stanford AI Index</a><a class="chip" href="https://bluedot.org/" target="_blank" rel="noopener">BlueDot Impact courses</a></div></section>
+  <p class="err">Could not load: Hacker News (AI, 150+ pts): URLError, METR: ParseError</p>
+</main>
+<script>
+(function(){
+  var KEY="aibrief-read", PREF="aibrief-hide";
+  function load(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}
+  function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+  var read=load(KEY,{});
+  function ago(t){var m=Math.round((Date.now()-new Date(t))/6e4);
+    if(m<60)return m+"m ago";var h=Math.round(m/60);if(h<48)return h+"h ago";return Math.round(h/24)+"d ago"}
+  document.getElementById("when").textContent="Updated "+ago("2026-11-23T01:18:22.217067+00:00");
+  document.querySelectorAll("time").forEach(function(t){t.textContent=ago(t.getAttribute("datetime"))});
+  function paint(){document.querySelectorAll(".item").forEach(function(li){li.classList.toggle("read",!!read[li.dataset.id])})}
+  function mark(li){read[li.dataset.id]=Date.now()}
+  document.querySelectorAll(".item a").forEach(function(a){a.addEventListener("click",function(){mark(a.parentNode);save(KEY,read);setTimeout(paint,300)})});
+  document.querySelectorAll(".mark").forEach(function(b){b.addEventListener("click",function(){
+    b.closest(".sec").querySelectorAll(".item").forEach(mark);save(KEY,read);paint()})});
+  var cut=Date.now()-45*864e5;for(var k in read){if(read[k]<cut)delete read[k]}save(KEY,read);
+  var hide=document.getElementById("hide");
+  function setHide(on){document.body.classList.toggle("hide-read",on);hide.setAttribute("aria-pressed",on);save(PREF,on)}
+  hide.addEventListener("click",function(){setHide(!document.body.classList.contains("hide-read"))});
+  setHide(load(PREF,false));paint();
+  if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(function(){})}
+})();
+</script>
+</body>
+</html>
