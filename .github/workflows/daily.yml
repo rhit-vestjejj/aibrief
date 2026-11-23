@@ -42,24 +42,39 @@ jobs:
     needs: check
     if: needs.check.outputs.build == 'true'
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+    outputs:
+      note: ${{ steps.build.outputs.note }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - name: Build page
+        id: build
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}   # optional: enables AI summary
-          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}                 # optional: morning push notification
-          SITE_URL: ${{ vars.SITE_URL }}                        # optional: notification tap target
           ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL || 'claude-haiku-5-5' }}
         run: python build.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
+
+  deploy:
+    # Separate job, so the notification only goes out once the page is live,
+    # and a failed deploy can be re-run without rebuilding.
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
       - id: deploy
         uses: actions/deploy-pages@v4
+      - uses: actions/checkout@v4
+      - name: Send notification
+        env:
+          NOTE: ${{ needs.build.outputs.note }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}   # optional: morning push notification
+          SITE_URL: ${{ vars.SITE_URL }}          # optional: notification tap target
+        run: python3 build.py --notify

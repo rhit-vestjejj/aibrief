@@ -152,16 +152,19 @@ def summarize(name, focus, sections):
         return None
 
 
-def notify(tabs, total):
+def notification(tabs, total):
+    msg = "\n".join(f"• {t['name']}: {t['summary']['headline']}" for t in tabs
+                    if (t["summary"] or {}).get("headline")) or f"{total} new items. Tap to open."
+    return {"title": f"AI Brief: {total} new items", "message": msg}
+
+
+def send_notification(note):
     topic = os.environ.get("NTFY_TOPIC")
     if not topic:
         return
-    title = f"AI Brief: {total} new items"
-    msg = "\n".join(f"• {t['name']}: {t['summary']['headline']}" for t in tabs
-                    if (t["summary"] or {}).get("headline")) or f"{total} new items. Tap to open."
     req = urllib.request.Request(
-        f"https://ntfy.sh/{topic}", data=msg.encode(), method="POST",
-        headers={"Title": title.encode("utf-8").decode("latin-1", "ignore"),
+        f"https://ntfy.sh/{topic}", data=note["message"].encode(), method="POST",
+        headers={"Title": note["title"].encode("utf-8").decode("latin-1", "ignore"),
                  "Click": os.environ.get("SITE_URL", ""), "Tags": "newspaper"})
     try:
         urllib.request.urlopen(req, timeout=20)
@@ -248,10 +251,19 @@ def main():
     OUT.mkdir(exist_ok=True)
     (OUT / "index.html").write_text(render(tabs, errors))
     total = sum(len(s["items"]) for t in tabs for s in t["sections"])
-    notify(tabs, total)
+    note = notification(tabs, total)
+    if os.environ.get("GITHUB_OUTPUT"):
+        # In GitHub Actions, hand the message to the deploy job, which sends it once the page is live.
+        with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+            f.write(f"note={json.dumps(note)}\n")
+    else:
+        send_notification(note)
     print(f"Built site/index.html: {len(tabs)} tabs, {total} items, "
           f"summaries={sum(1 for t in tabs if t['summary'])}/{len(tabs)}, errors={len(errors)}")
 
 
 if __name__ == "__main__":
-    main()
+    if sys.argv[1:] == ["--notify"]:  # the workflow's deploy job: send the message the build job prepared
+        send_notification(json.loads(os.environ["NOTE"]))
+    else:
+        main()

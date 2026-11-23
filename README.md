@@ -20,7 +20,7 @@ GitHub Action (daily cron) → build.py → fetch feeds → [Claude summary] →
 | `build.py` | Fetches feeds, calls Claude once per tab (optional), renders the page, sends the push (optional). |
 | `template.html` | The page design: tab bar with unread counts, dark/light mode, read tracking, "Hide read", "Mark read". |
 | `site/` | App shell: manifest, icons, offline support. `index.html` here is a sample and gets rebuilt every run. |
-| `.github/workflows/daily.yml` | Runs the build daily at 10:40 UTC (4:40 AM CST / 5:40 AM CDT), with a backup at 11:25 UTC that only runs if the first one was skipped by GitHub, and deploys it. |
+| `.github/workflows/daily.yml` | Runs the build daily at 10:40 UTC (4:40 AM CST / 5:40 AM CDT), with a backup at 11:25 UTC that only runs if the first one did not succeed. It deploys the page, then sends the notification once the page is live. |
 
 ---
 
