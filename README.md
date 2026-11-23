@@ -83,7 +83,7 @@ Trigger it any of these ways:
 - **Open a specific tab:** add `#` plus the tab name in lowercase with dashes, e.g. `…/aibrief/#news` or `…/aibrief/#long-reads`. This is handy in an iPhone Shortcut.
 - **Email-only newsletters:** use kill-the-newsletter.com to turn them into a feed URL.
 - **Change the time:** edit the two `cron` lines in `daily.yml` (main and backup). They are in UTC. Avoid minute `0`: GitHub often delays or drops runs at the top of the hour.
-- **Too much or too little:** change `days` or `max_per_feed` for a section.
+- **Too much or too little:** change a section's `hours` (or `days`), `top`, or `max_per_feed`. `top` shows only the N most important items, picked by the AI summary; without an API key, everything shows newest first.
 - **Run locally:** `python3 build.py`, then open `site/index.html`.
 
 If a feed fails, the rest still build, and the failure is listed at the bottom of the page.

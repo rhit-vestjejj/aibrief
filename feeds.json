@@ -1,5 +1,5 @@
 {
-  "_note": "Each tab has its own sections, quick links, and a 'focus' that steers its AI summary. 'days' = how far back a section looks; 'max_per_feed' caps posts per source (override per feed with \"max\").",
+  "_note": "Each tab has its own sections, quick links, and a 'focus' that steers its AI summary. 'hours' (or 'days') = how far back a section looks. 'top' = show only the N most important items, picked by the AI summary (without it, everything shows newest first). 'max_per_feed' caps posts per source (override per feed with \"max\").",
   "tabs": [
     {
       "name": "AI",
@@ -7,18 +7,39 @@
       "sections": [
         {
           "name": "Daily",
-          "days": 2,
+          "hours": 18,
+          "top": 8,
           "feeds": [
+            {
+              "name": "The Decoder",
+              "url": "https://the-decoder.com/feed/"
+            },
+            {
+              "name": "TechCrunch",
+              "url": "https://techcrunch.com/category/artificial-intelligence/feed/"
+            },
+            {
+              "name": "The Verge",
+              "url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"
+            },
+            {
+              "name": "Wired",
+              "url": "https://www.wired.com/feed/tag/ai/latest/rss"
+            },
+            {
+              "name": "Ars Technica",
+              "url": "https://arstechnica.com/ai/feed/"
+            },
             {
               "name": "Simon Willison",
               "url": "https://simonwillison.net/tags/ai.atom"
             },
             {
               "name": "Hacker News",
-              "url": "https://hnrss.org/newest?q=AI&points=150"
+              "url": "https://hnrss.org/newest?q=AI&points=50"
             }
           ],
-          "max_per_feed": 10
+          "max_per_feed": 8
         },
         {
           "name": "Weekly",
@@ -112,7 +133,8 @@
       "sections": [
         {
           "name": "Today",
-          "days": 1,
+          "hours": 18,
+          "top": 8,
           "feeds": [
             {
               "name": "CNBC",
@@ -121,9 +143,13 @@
             {
               "name": "NYT Business",
               "url": "https://rss.nytimes.com/services/xml/rss/nyt/Business.xml"
+            },
+            {
+              "name": "Bloomberg",
+              "url": "https://feeds.bloomberg.com/markets/news.rss"
             }
           ],
-          "max_per_feed": 6
+          "max_per_feed": 8
         },
         {
           "name": "This week",
@@ -170,8 +196,13 @@
       "sections": [
         {
           "name": "Daily",
-          "days": 2,
+          "hours": 18,
+          "top": 10,
           "feeds": [
+            {
+              "name": "Techmeme",
+              "url": "https://www.techmeme.com/feed.xml"
+            },
             {
               "name": "The Verge",
               "url": "https://www.theverge.com/rss/index.xml"
@@ -186,11 +217,10 @@
             },
             {
               "name": "Hacker News",
-              "url": "https://hnrss.org/frontpage?points=300",
-              "max": 5
+              "url": "https://hnrss.org/frontpage?points=100"
             }
           ],
-          "max_per_feed": 4
+          "max_per_feed": 8
         },
         {
           "name": "Weekly",
@@ -220,7 +250,8 @@
       "sections": [
         {
           "name": "US",
-          "days": 1,
+          "hours": 18,
+          "top": 8,
           "feeds": [
             {
               "name": "NPR",
@@ -235,11 +266,12 @@
               "url": "https://rss.nytimes.com/services/xml/rss/nyt/US.xml"
             }
           ],
-          "max_per_feed": 4
+          "max_per_feed": 8
         },
         {
           "name": "World",
-          "days": 1,
+          "hours": 18,
+          "top": 8,
           "feeds": [
             {
               "name": "BBC World",
@@ -254,7 +286,7 @@
               "url": "https://www.aljazeera.com/xml/rss/all.xml"
             }
           ],
-          "max_per_feed": 4
+          "max_per_feed": 8
         }
       ],
       "links": [

@@ -88,7 +88,7 @@ def parse_feed(raw):
 def collect(section_configs):
     sections, errors = [], []
     for sec in section_configs:
-        cutoff = NOW - dt.timedelta(days=sec["days"])
+        cutoff = NOW - dt.timedelta(hours=sec.get("hours", sec.get("days", 1) * 24))
         items = []
         for f in sec["feeds"]:
             try:
@@ -103,7 +103,7 @@ def collect(section_configs):
                 errors.append(f"{f['name']}: {type(ex).__name__}")
                 print(f"WARN {f['name']}: {ex}", file=sys.stderr)
         items.sort(key=lambda x: x["date"], reverse=True)
-        sections.append({"name": sec["name"], "items": items})
+        sections.append({"name": sec["name"], "top": sec.get("top"), "items": items})
     return sections, errors
 
 
@@ -113,18 +113,32 @@ def summarize(name, focus, sections):
     key = os.environ.get("ANTHROPIC_API_KEY")
     if not key:
         return None
-    pool = [dict(section=s["name"], source=i["source"], title=i["title"],
-                 url=i["url"], snippet=i["snippet"][:300])
-            for s in sections for i in s["items"][:15]]
+    pool, items = [], []  # items[id] = (section name, item)
+    for s in sections:
+        # Sections with "top" send every candidate so the model can pick the most important ones.
+        for i in (s["items"] if s.get("top") else s["items"][:15]):
+            pool.append(dict(id=len(items), section=s["name"], source=i["source"], title=i["title"],
+                             hours_ago=round((NOW - i["date"]).total_seconds() / 3600, 1),
+                             snippet=i["snippet"][:200]))
+            items.append((s["name"], i))
     if not pool:
         return None
+    top = {s["name"]: s["top"] for s in sections if s.get("top") and s["items"]}
     prompt = (
         f"You are writing a 2-minute morning brief for the \"{name}\" tab of a personal "
         f"news reader. {focus or 'Focus on what is new and important.'}\n\n"
-        "Return ONLY JSON: {\"headline\": str (<=12 words), \"bullets\": [3-4 strings, "
-        "each <=30 words], \"must_read\": {\"title\": str, \"url\": str, \"why\": str (<=25 words)}}. "
-        "must_read must be one of the provided URLs.\n\nItems:\n" + json.dumps(pool)
-    )
+        "Return ONLY JSON with these keys:\n"
+        "- headline: string, at most 12 words\n"
+        "- bullets: 3-4 strings, each at most 30 words\n"
+        "- must_read: {\"id\": item id, \"why\": string of at most 25 words}\n")
+    if top:
+        prompt += (
+            "- top: an object mapping section name to a list of item ids from that section, most "
+            f"important first. Sections and maximum counts: {json.dumps(top)}. Pick what an informed "
+            "reader most needs to know. Leave out deals and shopping, gift guides, minor product "
+            "reviews, and listicles. When several items cover the same story, keep only the best one. "
+            "When two items matter about equally, prefer the newer one.\n")
+    prompt += "\nItems:\n" + json.dumps(pool, ensure_ascii=False)
     body = json.dumps({
         "model": os.environ.get("ANTHROPIC_MODEL", "claude-haiku-5-5"),
         "max_tokens": 4000,  # includes the model's (hidden) thinking, so leave headroom
@@ -142,10 +156,32 @@ def summarize(name, focus, sections):
         text = "".join(b.get("text", "") for b in resp.get("content", []) if b.get("type") == "text")
         if not text:
             raise ValueError(f"no text in response (stop_reason={resp.get('stop_reason')})")
+        u = resp.get("usage", {})
+        print(f"{name} summary: {u.get('input_tokens')} input / {u.get('output_tokens')} output tokens")
         data = json.loads(text[text.find("{"): text.rfind("}") + 1])
-        valid = {p["url"] for p in pool}
-        if data.get("must_read", {}).get("url") not in valid:
-            data.pop("must_read", None)
+
+        def lookup(n):  # model-supplied id -> (section, item), or None if invalid
+            try:
+                n = int(n)
+            except (TypeError, ValueError):
+                return None
+            return items[n] if 0 <= n < len(items) else None
+
+        mr = data.pop("must_read", None) or {}
+        hit = lookup(mr.get("id"))
+        if hit:
+            data["must_read"] = {"title": hit[1]["title"], "url": hit[1]["url"], "why": mr.get("why", "")}
+        picks = {}
+        for sec, ids in (data.get("top") or {}).items():
+            if sec in top and isinstance(ids, list):
+                chosen, seen = [], set()
+                for n in ids:
+                    hit = lookup(n)
+                    if hit and hit[0] == sec and hit[1]["id"] not in seen:
+                        seen.add(hit[1]["id"])
+                        chosen.append(hit[1])
+                picks[sec] = chosen[: top[sec]]
+        data["top"] = picks
         return data
     except Exception as ex:
         print(f"WARN {name} summary failed: {ex}", file=sys.stderr)
@@ -241,13 +277,20 @@ def load_tabs(config):
 
 def main():
     config = json.loads((ROOT / os.environ.get("FEEDS_FILE", "feeds.json")).read_text())
-    tabs, errors, taken = [], [], set()
+    tabs, errors, taken, ranked = [], [], set(), [0, 0]
     for t in load_tabs(config):
         sections, errs = collect(t["sections"])
         errors += errs
+        summary = summarize(t["name"], t.get("focus", ""), sections)
+        for s in sections:
+            if s["top"] and s["items"]:
+                ranked[1] += 1
+                picks = ((summary or {}).get("top") or {}).get(s["name"])
+                if picks:  # most important first; without a summary, keep everything newest first
+                    s["items"] = picks
+                    ranked[0] += 1
         tabs.append({"name": t["name"], "id": slug(t["name"], taken), "sections": sections,
-                     "links": t.get("links", []),
-                     "summary": summarize(t["name"], t.get("focus", ""), sections)})
+                     "links": t.get("links", []), "summary": summary})
     OUT.mkdir(exist_ok=True)
     (OUT / "index.html").write_text(render(tabs, errors))
     total = sum(len(s["items"]) for t in tabs for s in t["sections"])
@@ -259,7 +302,8 @@ def main():
     else:
         send_notification(note)
     print(f"Built site/index.html: {len(tabs)} tabs, {total} items, "
-          f"summaries={sum(1 for t in tabs if t['summary'])}/{len(tabs)}, errors={len(errors)}")
+          f"summaries={sum(1 for t in tabs if t['summary'])}/{len(tabs)}, "
+          f"ranked sections={ranked[0]}/{ranked[1]}, errors={len(errors)}")
 
 
 if __name__ == "__main__":
