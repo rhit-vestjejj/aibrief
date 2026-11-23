@@ -121,7 +121,7 @@ def summarize(name, focus, sections):
     prompt = (
         f"You are writing a 2-minute morning brief for the \"{name}\" tab of a personal "
         f"news reader. {focus or 'Focus on what is new and important.'}\n\n"
-        "Return ONLY JSON: {\"headline\": str (<=12 words), \"bullets\": [3-5 strings, "
+        "Return ONLY JSON: {\"headline\": str (<=12 words), \"bullets\": [3-4 strings, "
         "each <=30 words], \"must_read\": {\"title\": str, \"url\": str, \"why\": str (<=25 words)}}. "
         "must_read must be one of the provided URLs.\n\nItems:\n" + json.dumps(pool)
     )
@@ -186,12 +186,12 @@ def slug(name, taken):
 def render_tab(tab):
     summary, parts = tab["summary"], []
     if summary:
-        bl = "".join(f"<li>{E(b)}</li>" for b in summary.get("bullets", []))
+        bl = "".join(f"<li>{E(b)}</li>" for b in summary.get("bullets", [])[:4])
         mr = summary.get("must_read")
         mr_html = (f'<a class="must" href="{E(mr["url"])}" target="_blank" rel="noopener">'
-                   f'<span class="lbl">Read in full</span><strong>{E(mr["title"])}</strong>'
-                   f'<span>{E(mr.get("why", ""))}</span></a>') if mr else ""
-        parts.append(f'<section class="card summary"><h2>{E(summary.get("headline", "Today in " + tab["name"]))}</h2>'
+                   f'<span class="must-label">Worth reading</span><span class="must-title">{E(mr["title"])}</span>'
+                   f'<span class="must-why">{E(mr.get("why", ""))}</span></a>') if mr else ""
+        parts.append(f'<section class="brief"><h2>{E(summary.get("headline", "Today in " + tab["name"]))}</h2>'
                      f'<ul>{bl}</ul>{mr_html}</section>')
     for s in tab["sections"]:
         rows = "".join(
@@ -201,11 +201,11 @@ def render_tab(tab):
             f'<span class="title">{E(i["title"])}</span></a></li>'
             for i in s["items"]) or '<li class="empty">Nothing new.</li>'
         parts.append(f'<section class="sec"><div class="sec-head"><h2>{E(s["name"])}</h2>'
-                     f'<button class="mark" type="button">Mark read</button></div><ul>{rows}</ul></section>')
+                     f'<button class="mark" type="button">Mark all read</button></div><ul>{rows}</ul></section>')
     if tab["links"]:
         lk = "".join(f'<a class="chip" href="{E(l["url"])}" target="_blank" rel="noopener">{E(l["name"])}</a>'
                      for l in tab["links"])
-        parts.append(f'<section class="sec"><div class="sec-head"><h2>Check-ins</h2></div><div class="chips">{lk}</div></section>')
+        parts.append(f'<section class="sec"><div class="sec-head"><h2>Links</h2></div><div class="chips">{lk}</div></section>')
     return "\n".join(parts)
 
 
@@ -214,7 +214,7 @@ def render(tabs, errors):
     nav = "".join(
         f'<button class="tab" type="button" role="tab" id="t-{t["id"]}" data-tab="{t["id"]}" '
         f'aria-controls="p-{t["id"]}" aria-selected="{"true" if i == 0 else "false"}">'
-        f'{E(t["name"])}<span class="n"></span></button>'
+        f'{E(t["name"])}</button>'
         for i, t in enumerate(tabs))
     panels = "\n".join(
         f'<div class="panel" role="tabpanel" id="p-{t["id"]}" aria-labelledby="t-{t["id"]}"'

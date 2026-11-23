@@ -14,7 +14,7 @@
               "url": "https://simonwillison.net/tags/ai.atom"
             },
             {
-              "name": "Hacker News (AI, 150+ pts)",
+              "name": "Hacker News",
               "url": "https://hnrss.org/newest?q=AI&points=150"
             }
           ],
@@ -185,7 +185,7 @@
               "url": "https://techcrunch.com/feed/"
             },
             {
-              "name": "Hacker News (300+ pts)",
+              "name": "Hacker News",
               "url": "https://hnrss.org/frontpage?points=300",
               "max": 5
             }
