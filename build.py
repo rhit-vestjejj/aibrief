@@ -128,7 +128,8 @@ def summarize(sections):
     )
     body = json.dumps({
         "model": os.environ.get("ANTHROPIC_MODEL", "claude-haiku-5-5"),
-        "max_tokens": 800,
+        "max_tokens": 4000,  # includes the model's (hidden) thinking, so leave headroom
+        "output_config": {"effort": "low"},  # simple summary: keep thinking short
         "messages": [{"role": "user", "content": prompt}],
     }).encode()
     req = urllib.request.Request(
@@ -137,7 +138,11 @@ def summarize(sections):
                  "content-type": "application/json"})
     try:
         with urllib.request.urlopen(req, timeout=60) as r:
-            text = json.load(r)["content"][0]["text"]
+            resp = json.load(r)
+        # Replies can start with a "thinking" block; join only the text blocks.
+        text = "".join(b.get("text", "") for b in resp.get("content", []) if b.get("type") == "text")
+        if not text:
+            raise ValueError(f"no text in response (stop_reason={resp.get('stop_reason')})")
         data = json.loads(text[text.find("{"): text.rfind("}") + 1])
         valid = {p["url"] for p in pool}
         if data.get("must_read", {}).get("url") not in valid:
