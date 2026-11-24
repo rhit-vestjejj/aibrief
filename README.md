@@ -20,7 +20,7 @@ GitHub Action (daily cron) → build.py → fetch feeds → [Claude summary] →
 | `build.py` | Fetches feeds, calls Claude once per tab (optional), renders the page, sends the push (optional). |
 | `template.html` | The page design: tab bar with unread counts, dark/light mode, read tracking, "Hide read", "Mark read". |
 | `site/` | App shell: manifest, icons, offline support. `index.html` here is a sample and gets rebuilt every run. |
-| `.github/workflows/daily.yml` | Runs the build daily at 10:40 UTC (4:40 AM CST / 5:40 AM CDT), with a backup at 11:25 UTC that only runs if the first one did not succeed. It deploys the page, then sends the notification once the page is live. |
+| `.github/workflows/daily.yml` | Builds and deploys the page, then sends the notification once the page is live. The morning run is started by an outside cron service (step 6), with GitHub's own schedule as a backup. A morning run skips itself if today's brief already went out. |
 
 ---
 
@@ -52,6 +52,32 @@ Go to the **Actions tab → Build AI Brief → Run workflow**. When it turns gre
 3. In the ntfy app, subscribe to that topic.
 4. Add the repo secret `NTFY_TOPIC` = your topic name.
 5. Add the repo **variable** `SITE_URL` = your Pages URL, so tapping the notification opens the brief.
+
+### 6. Reliable morning trigger (cron-job.org)
+GitHub's built-in schedule can skip runs entirely, sometimes for days on a new repo, so a free outside service starts the morning run instead. GitHub's schedule stays on as a backup, and there is never a second brief or notification.
+
+**a. Create a GitHub token that can only start this workflow**
+1. Go to github.com/settings/personal-access-tokens/new (Settings → Developer settings → Fine-grained tokens).
+2. Name: `aibrief-cron`. Expiration: the longest offered. Put a reminder in your calendar to renew it.
+3. Repository access: **Only select repositories** → your aibrief repo.
+4. Permissions → Repository permissions → **Actions: Read and write**. Leave everything else at "No access".
+5. Generate, and copy the token. You'll paste it in the next step and nowhere else.
+
+**b. Create the cron job**
+1. Sign up at cron-job.org (free) and choose **Create cronjob**.
+2. Title: `AI Brief`. URL: `https://api.github.com/repos/<your-username>/aibrief/actions/workflows/daily.yml/dispatches`
+3. Schedule: every day at **4:45**, time zone **America/Chicago**. It follows daylight saving automatically.
+4. Under **Advanced**:
+   - Request method: **POST**
+   - Headers:
+     - `Authorization` = `Bearer <your token>`
+     - `Accept` = `application/vnd.github+json`
+     - `X-GitHub-Api-Version` = `2022-11-28`
+     - `Content-Type` = `application/json`
+   - Request body: `{"ref":"main","inputs":{"morning":"true"}}`
+5. Save, then use **Test run**. A response of **204** means it worked. A new "Morning brief" run appears in the Actions tab; it skips itself if today's brief already went out.
+
+cron-job.org emails you if a call fails, for example when the token expires.
 
 ---
 

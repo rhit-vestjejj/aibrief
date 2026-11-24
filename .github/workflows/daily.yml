@@ -1,11 +1,19 @@
 name: Build AI Brief
+run-name: ${{ (github.event_name == 'schedule' || inputs.morning) && 'Morning brief' || 'Build AI Brief' }}
 
 on:
+  # The main morning trigger is an outside cron service that calls workflow_dispatch with
+  # morning=true (see README), because GitHub's own scheduler can skip runs entirely.
+  # These GitHub schedules are a backup. Every morning run skips itself if today's brief already went out.
   schedule:
-    # GitHub often delays or drops runs at the top of the hour, so use odd minutes.
-    - cron: "40 10 * * *"   # main:   10:40 UTC = 4:40 AM CST / 5:40 AM CDT
-    - cron: "25 11 * * *"   # backup: 11:25 UTC = 5:25 AM CST / 6:25 AM CDT (skips if main ran)
+    - cron: "40 10 * * *"   # 10:40 UTC = 4:40 AM CST / 5:40 AM CDT
+    - cron: "25 11 * * *"   # 11:25 UTC = 5:25 AM CST / 6:25 AM CDT
   workflow_dispatch:        # lets you run it manually from the Actions tab
+    inputs:
+      morning:
+        description: "Morning run: skip if today's morning brief already went out"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -18,7 +26,7 @@ concurrency:
 
 jobs:
   check:
-    # The backup slot builds only if no scheduled run has succeeded yet today.
+    # A morning run builds only if no other morning run has succeeded yet today (UTC).
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -28,12 +36,13 @@ jobs:
       - id: check
         env:
           GH_TOKEN: ${{ github.token }}
+          MORNING: ${{ github.event_name == 'schedule' || inputs.morning }}
         run: |
           build=true
-          if [ "$GITHUB_EVENT_NAME" = schedule ]; then
-            done=$(gh run list -R "$GITHUB_REPOSITORY" -w daily.yml -e schedule -s success \
-                     --created ">=$(date -u +%F)" --json databaseId \
-                     --jq "map(select(.databaseId != $GITHUB_RUN_ID)) | length")
+          if [ "$MORNING" = true ]; then
+            done=$(gh run list -R "$GITHUB_REPOSITORY" -w daily.yml -s success -L 50 \
+                     --created ">=$(date -u +%F)" --json databaseId,displayTitle \
+                     --jq "map(select(.displayTitle == \"Morning brief\" and .databaseId != $GITHUB_RUN_ID)) | length")
             if [ "$done" -gt 0 ]; then build=false; echo "Today's brief already ran; skipping."; fi
           fi
           echo "build=$build" >> "$GITHUB_OUTPUT"
