@@ -116,9 +116,31 @@ def collect(section_configs):
 
 # ---------- optional AI summary ----------
 
+def ask_claude(prompt, label):
+    """Send one prompt to Claude and return the JSON object in its reply."""
+    body = json.dumps({
+        "model": os.environ.get("ANTHROPIC_MODEL", "claude-haiku-5-5"),
+        "max_tokens": 4000,  # includes the model's (hidden) thinking, so leave headroom
+        "output_config": {"effort": "low"},  # simple tasks: keep thinking short
+        "messages": [{"role": "user", "content": prompt}],
+    }).encode()
+    req = urllib.request.Request(
+        "https://api.anthropic.com/v1/messages", data=body, method="POST",
+        headers={"x-api-key": os.environ["ANTHROPIC_API_KEY"], "anthropic-version": "2023-06-01",
+                 "content-type": "application/json"})
+    with urllib.request.urlopen(req, timeout=60) as r:
+        resp = json.load(r)
+    # Replies can start with a "thinking" block; join only the text blocks.
+    text = "".join(b.get("text", "") for b in resp.get("content", []) if b.get("type") == "text")
+    if not text:
+        raise ValueError(f"no text in response (stop_reason={resp.get('stop_reason')})")
+    u = resp.get("usage", {})
+    print(f"{label}: {u.get('input_tokens')} input / {u.get('output_tokens')} output tokens")
+    return json.loads(text[text.find("{"): text.rfind("}") + 1])
+
+
 def summarize(name, focus, sections):
-    key = os.environ.get("ANTHROPIC_API_KEY")
-    if not key:
+    if not os.environ.get("ANTHROPIC_API_KEY"):
         return None
     pool, items = [], []  # items[id] = (section name, item)
     for s in sections:
@@ -146,26 +168,8 @@ def summarize(name, focus, sections):
             "reviews, and listicles. When several items cover the same story, keep only the best one. "
             "When two items matter about equally, prefer the newer one.\n")
     prompt += "\nItems:\n" + json.dumps(pool, ensure_ascii=False)
-    body = json.dumps({
-        "model": os.environ.get("ANTHROPIC_MODEL", "claude-haiku-5-5"),
-        "max_tokens": 4000,  # includes the model's (hidden) thinking, so leave headroom
-        "output_config": {"effort": "low"},  # simple summary: keep thinking short
-        "messages": [{"role": "user", "content": prompt}],
-    }).encode()
-    req = urllib.request.Request(
-        "https://api.anthropic.com/v1/messages", data=body, method="POST",
-        headers={"x-api-key": key, "anthropic-version": "2023-06-01",
-                 "content-type": "application/json"})
     try:
-        with urllib.request.urlopen(req, timeout=60) as r:
-            resp = json.load(r)
-        # Replies can start with a "thinking" block; join only the text blocks.
-        text = "".join(b.get("text", "") for b in resp.get("content", []) if b.get("type") == "text")
-        if not text:
-            raise ValueError(f"no text in response (stop_reason={resp.get('stop_reason')})")
-        u = resp.get("usage", {})
-        print(f"{name} summary: {u.get('input_tokens')} input / {u.get('output_tokens')} output tokens")
-        data = json.loads(text[text.find("{"): text.rfind("}") + 1])
+        data = ask_claude(prompt, f"{name} summary")
 
         def lookup(n):  # model-supplied id -> (section, item), or None if invalid
             try:
@@ -202,13 +206,17 @@ def notification(tabs, total):
 
 
 def send_notification(note):
+    """Post to ntfy. note: title, message, and optionally click (URL), tags, priority (1-5)."""
     topic = os.environ.get("NTFY_TOPIC")
     if not topic:
         return
+    headers = {"Title": note["title"].encode("utf-8").decode("latin-1", "ignore"),
+               "Click": note.get("click") or os.environ.get("SITE_URL", ""),
+               "Tags": note.get("tags", "newspaper")}
+    if note.get("priority"):
+        headers["Priority"] = str(note["priority"])
     req = urllib.request.Request(
-        f"https://ntfy.sh/{topic}", data=note["message"].encode(), method="POST",
-        headers={"Title": note["title"].encode("utf-8").decode("latin-1", "ignore"),
-                 "Click": os.environ.get("SITE_URL", ""), "Tags": "newspaper"})
+        f"https://ntfy.sh/{topic}", data=note["message"].encode(), method="POST", headers=headers)
     try:
         urllib.request.urlopen(req, timeout=20)
     except Exception as ex:

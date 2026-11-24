@@ -438,5 +438,47 @@
       ],
       "links": []
     }
-  ]
+  ],
+  "alerts": {
+    "_note": "Breaking-news alerts (alerts.py), checked every 15 minutes by an outside cron service. A story alerts only if at least 'min_outlets' different outlets reported it in the last 'hours' hours AND the AI scores it at least 'min_score' out of 10 (9 = huge, front-page news everywhere). At most 'max_alerts' in any 12 hours, none during 'quiet_hours' (local time, from-to). Watches every feed in the tabs' 'hours' sections plus 'extra_feeds'.",
+    "hours": 4,
+    "min_outlets": 3,
+    "min_score": 9,
+    "max_alerts": 3,
+    "quiet_hours": [
+      23,
+      6
+    ],
+    "timezone": "America/Chicago",
+    "extra_feeds": [
+      {
+        "name": "NYT",
+        "url": "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"
+      },
+      {
+        "name": "BBC",
+        "url": "https://feeds.bbci.co.uk/news/rss.xml"
+      },
+      {
+        "name": "Bloomberg",
+        "url": "https://feeds.bloomberg.com/technology/news.rss"
+      },
+      {
+        "name": "Bloomberg",
+        "url": "https://feeds.bloomberg.com/politics/news.rss"
+      },
+      {
+        "name": "WSJ",
+        "url": "https://feeds.content.dowjones.io/public/rss/RSSWorldNews"
+      },
+      {
+        "name": "The Guardian",
+        "url": "https://www.theguardian.com/world/rss"
+      },
+      {
+        "name": "Axios",
+        "url": "https://api.axios.com/feed/"
+      }
+    ]
+  }
 }

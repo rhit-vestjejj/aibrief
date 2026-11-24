@@ -21,6 +21,7 @@ GitHub Action (daily cron) → build.py → fetch feeds → [Claude summary] →
 | `template.html` | The page design: tab bar with unread counts, dark/light mode, read tracking, "Hide read", "Mark read". |
 | `site/` | App shell: manifest, icons, offline support. `index.html` here is a sample and gets rebuilt every run. |
 | `.github/workflows/daily.yml` | Builds and deploys the page, then sends the notification once the page is live. The morning run is started by an outside cron service (step 6), with GitHub's own schedule as a backup. A morning run skips itself if today's brief already went out. |
+| `alerts.py` + `.github/workflows/alerts.yml` | Breaking-news alerts during the day (step 7). Settings are under `alerts` in `feeds.json`. |
 
 ---
 
@@ -78,6 +79,22 @@ GitHub's built-in schedule can skip runs entirely, sometimes for days on a new r
 5. Save, then use **Test run**. A response of **204** means it worked. A new "Morning brief" run appears in the Actions tab; it skips itself if today's brief already went out.
 
 cron-job.org emails you if a call fails, for example when the token expires.
+
+### 7. (Optional) Breaking-news alerts during the day
+`alerts.py` checks the news every 15 minutes and sends a separate, high-priority notification when something huge happens, for example a top company's CEO being fired. A story alerts only if it passes all three checks:
+
+1. **Breadth:** at least 3 different outlets reported it in the last 4 hours.
+2. **Size:** Claude scores it at least 9 out of 10 against a strict front-page rubric. A 9 means front-page news everywhere, the kind people text each other about. Most days nothing qualifies.
+3. **Guardrails:** never the same story twice, at most 3 alerts in any 12 hours, and nothing between 11 PM and 6 AM.
+
+All of these settings are under `alerts` in `feeds.json`. Each check costs about a tenth of a cent.
+
+To turn it on, create a second cron-job.org job. The easiest way is to clone the morning job and change three things:
+- URL: `https://api.github.com/repos/<your-username>/aibrief/actions/workflows/alerts.yml/dispatches`
+- Request body: `{"ref":"main"}`
+- Schedule: every 15 minutes from 6:00 to 22:45, time zone America/Chicago
+
+To see what an alert looks like on your phone, go to **Actions → Breaking news alerts → Run workflow**, tick **Send a sample alert**, and run it.
 
 ---
 

@@ -1,0 +1,32 @@
+name: Breaking news alerts
+
+on:
+  # Started every 15 minutes during the day by an outside cron service (see README),
+  # because GitHub's own scheduler skips runs for this repo.
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Send a sample alert instead of checking the news"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: alerts
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for huge news
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL || 'claude-haiku-5-5' }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: python3 alerts.py ${{ inputs.test && '--test' || '' }}
