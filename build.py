@@ -76,11 +76,18 @@ def parse_feed(raw):
             })
     else:
         for i in root.iter("item"):
+            title = clean(i.findtext("title"), 200)
+            # News aggregators (e.g. Google News) name the original outlet in <source>
+            # and append " - Outlet" to the title; show the outlet as the source instead.
+            via = clean(i.findtext("source"), 60)
+            if via and title.endswith(f" - {via}"):
+                title = title[: -len(via) - 3]
             items.append({
-                "title": clean(i.findtext("title"), 200),
+                "title": title,
                 "url": (i.findtext("link") or "").strip(),
                 "date": parse_date(i.findtext("pubDate") or i.findtext(DC_DATE)),
                 "snippet": clean(i.findtext("description") or i.findtext(CONTENT)),
+                "via": via,
             })
     return items
 
@@ -96,7 +103,7 @@ def collect(section_configs):
                          if it["url"] and it["date"] and it["date"] >= cutoff]
                 fresh.sort(key=lambda x: x["date"], reverse=True)
                 for it in fresh[: f.get("max", sec.get("max_per_feed", 5))]:
-                    it["source"] = f["name"]
+                    it["source"] = it.get("via") or f["name"]
                     it["id"] = hashlib.sha1(it["url"].encode()).hexdigest()[:12]
                     items.append(it)
             except Exception as ex:  # one bad feed should never break the brief

@@ -191,6 +191,95 @@
       ]
     },
     {
+      "name": "Quant",
+      "focus": "The reader is deeply interested in quantitative finance: systematic and statistical-arbitrage strategies, factor investing, derivatives and volatility, market microstructure, machine learning for trading, and the quant industry (trading firms, hedge funds, hiring and pay). Favor new research, evidence-backed ideas, and notable industry moves. Skip get-rich-quick trading content, course and product ads, and generic market commentary. For news, prefer established outlets (Bloomberg, FT, Reuters, WSJ, eFinancialCareers, Business Insider) over low-quality aggregator sites.",
+      "sections": [
+        {
+          "name": "Today",
+          "hours": 18,
+          "top": 6,
+          "max_per_feed": 30,
+          "feeds": [
+            {
+              "name": "Quant firms in the news",
+              "url": "https://news.google.com/rss/search?q=%22Jane%20Street%22%20OR%20%22Citadel%20Securities%22%20OR%20%22Two%20Sigma%22%20OR%20%22Renaissance%20Technologies%22%20OR%20%22Hudson%20River%20Trading%22%20OR%20%22Jump%20Trading%22%20OR%20%22XTX%20Markets%22%20OR%20%22Optiver%22%20OR%20%22D.E.%20Shaw%22%20OR%20%22quant%20fund%22%20when%3A3d&hl=en-US&gl=US&ceid=US:en"
+            }
+          ]
+        },
+        {
+          "name": "New papers",
+          "days": 3,
+          "top": 6,
+          "max_per_feed": 60,
+          "feeds": [
+            {
+              "name": "arXiv",
+              "url": "https://rss.arxiv.org/rss/q-fin"
+            }
+          ]
+        },
+        {
+          "name": "This week",
+          "days": 7,
+          "top": 8,
+          "max_per_feed": 5,
+          "feeds": [
+            {
+              "name": "Quantocracy",
+              "url": "https://quantocracy.com/feed/",
+              "max": 2
+            },
+            {
+              "name": "CXO Advisory",
+              "url": "https://www.cxoadvisory.com/feed/"
+            },
+            {
+              "name": "Alpha Architect",
+              "url": "https://alphaarchitect.com/feed/"
+            },
+            {
+              "name": "Quantpedia",
+              "url": "https://quantpedia.com/feed/"
+            },
+            {
+              "name": "Moontower",
+              "url": "https://moontowermeta.com/feed/"
+            },
+            {
+              "name": "Abnormal Returns",
+              "url": "https://abnormalreturns.com/feed/"
+            },
+            {
+              "name": "Jane Street",
+              "url": "https://blog.janestreet.com/feed.xml"
+            }
+          ]
+        }
+      ],
+      "links": [
+        {
+          "name": "Quantocracy",
+          "url": "https://quantocracy.com/"
+        },
+        {
+          "name": "arXiv quant finance",
+          "url": "https://arxiv.org/list/q-fin/new"
+        },
+        {
+          "name": "AQR research",
+          "url": "https://www.aqr.com/Insights/Research"
+        },
+        {
+          "name": "Money Stuff (Matt Levine)",
+          "url": "https://www.bloomberg.com/account/newsletters/money-stuff"
+        },
+        {
+          "name": "r/quant",
+          "url": "https://www.reddit.com/r/quant/"
+        }
+      ]
+    },
+    {
       "name": "Tech",
       "focus": "Focus on notable launches, platform and policy shifts, security incidents, and big-tech business moves. Skip product reviews and shopping deals.",
       "sections": [

@@ -29,7 +29,7 @@ h1{font-size:34px;line-height:1.15;font-weight:700;letter-spacing:-.02em;margin:
 .date{margin:2px 0 0;font-size:15px;color:var(--muted)}
 .toggle{font-size:15px;padding:8px 0 8px 12px;margin-top:4px;white-space:nowrap}
 
-.tabs{position:sticky;top:0;z-index:2;display:flex;gap:24px;overflow-x:auto;scrollbar-width:none;margin:14px -20px 0;padding:0 20px;background:var(--bg);border-bottom:var(--hair) solid var(--sep)}
+.tabs{position:sticky;top:0;z-index:2;display:flex;gap:16px;overflow-x:auto;scrollbar-width:none;margin:14px -20px 0;padding:0 20px;background:var(--bg);border-bottom:var(--hair) solid var(--sep)}
 .tabs::-webkit-scrollbar{display:none}
 .tab{flex:none;font-size:15px;font-weight:600;color:var(--muted);padding:12px 0 10px;border-bottom:2px solid transparent}
 .tab[aria-selected=true]{color:var(--ink);border-bottom-color:var(--ink)}
@@ -92,7 +92,9 @@ footer p{margin:0 0 6px}
   function show(id){
     if(!tabs.length)return;
     if(!tabs.some(function(b){return b.dataset.tab===id}))id=tabs[0].dataset.tab;
-    tabs.forEach(function(b){var on=b.dataset.tab===id;b.setAttribute("aria-selected",on);document.getElementById("p-"+b.dataset.tab).hidden=!on});
+    tabs.forEach(function(b){var on=b.dataset.tab===id;b.setAttribute("aria-selected",on);document.getElementById("p-"+b.dataset.tab).hidden=!on;
+      if(on){var bar=b.parentNode,l=b.offsetLeft,r=l+b.offsetWidth;  // keep the selected tab fully visible on narrow screens
+        if(l<bar.scrollLeft+20)bar.scrollLeft=l-20;else if(r>bar.scrollLeft+bar.clientWidth-20)bar.scrollLeft=r-bar.clientWidth+20}});
     save(TAB,id);
   }
   tabs.forEach(function(b){b.addEventListener("click",function(){

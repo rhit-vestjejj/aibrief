@@ -1,6 +1,6 @@
 # AI Brief
 
-A personal morning reader for iPhone, with tabs for **AI · Markets · Tech · News · Long reads**. Every morning, a GitHub Action pulls your feeds, optionally writes a short Claude summary for each tab, and publishes a page you open like an app from your home screen.
+A personal morning reader for iPhone, with tabs for **AI · Markets · Quant · Tech · News · Long reads**. Every morning, a GitHub Action pulls your feeds, optionally writes a short Claude summary for each tab, and publishes a page you open like an app from your home screen.
 
 ```
 GitHub Action (daily cron) → build.py → fetch feeds → [Claude summary] → site/index.html → GitHub Pages → iPhone home screen
