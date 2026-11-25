@@ -440,7 +440,7 @@
     }
   ],
   "alerts": {
-    "_note": "Breaking-news alerts (alerts.py), checked every 15 minutes by an outside cron service. A story alerts only if at least 'min_outlets' different outlets reported it in the last 'hours' hours, the AI scores it at least 'min_score' out of 10 (9 = huge, front-page news everywhere), and it is new: not in this morning's brief, not already alerted, not a follow-up. At most 'max_per_day' alerts per day, none during 'quiet_hours' (local time, from-to). Watches every feed in the tabs' 'hours' sections plus 'extra_feeds'.",
+    "_note": "Breaking-news alerts (alerts.py), checked every hour by an outside cron service. A story alerts only if at least 'min_outlets' different outlets reported it in the last 'hours' hours, the AI scores it at least 'min_score' out of 10 (9 = huge, front-page news everywhere), and it is new: not in this morning's brief, not already alerted, not a follow-up. At most 'max_per_day' alerts per day, none during 'quiet_hours' (local time, from-to). Watches every feed in the tabs' 'hours' sections plus 'extra_feeds'.",
     "hours": 4,
     "min_outlets": 3,
     "min_score": 9,

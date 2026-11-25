@@ -81,19 +81,19 @@ GitHub's built-in schedule can skip runs entirely, sometimes for days on a new r
 cron-job.org emails you if a call fails, for example when the token expires.
 
 ### 7. (Optional) Breaking-news alerts during the day
-`alerts.py` checks the news every 15 minutes and sends a separate, high-priority notification when something huge happens, for example a top company's CEO being fired. A story alerts only if it passes all four checks:
+`alerts.py` checks the news every hour and sends a separate, high-priority notification when something huge happens, for example a top company's CEO being fired. A story alerts only if it passes all four checks:
 
 1. **Breadth:** at least 3 different outlets reported it in the last 4 hours.
 2. **Size:** Claude scores it at least 9 out of 10 against a strict front-page rubric. A 9 means front-page news everywhere, the kind people text each other about. Most days nothing qualifies.
 3. **New:** it broke in that window. It is not already in this morning's brief, was not already alerted, and is not just a follow-up to an earlier story.
 4. **Guardrails:** at most 3 alerts a day, and nothing between 11 PM and 6 AM.
 
-All of these settings are under `alerts` in `feeds.json`. Each check costs about a quarter of a cent: roughly $5 a month at every 15 minutes, or half that at every 30 minutes.
+All of these settings are under `alerts` in `feeds.json`. Each check costs about a quarter of a cent, so roughly $1.30 a month at one check an hour.
 
 To turn it on, create a second cron-job.org job. The easiest way is to clone the morning job and change three things:
 - URL: `https://api.github.com/repos/<your-username>/aibrief/actions/workflows/alerts.yml/dispatches`
 - Request body: `{"ref":"main"}`
-- Schedule: every 15 minutes from 6:00 to 22:45, time zone America/Chicago
+- Schedule: every hour from 6:00 to 22:00 (minute 0, hours 6-22), time zone America/Chicago
 
 To see what an alert looks like on your phone, go to **Actions → Breaking news alerts → Run workflow**, tick **Send a sample alert**, and run it.
 

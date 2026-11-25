@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Breaking-news alerts: push a phone notification when something truly huge happens.
 
-Run every ~15 minutes during the day (see README). A story alerts only if ALL of these hold:
+Run every hour during the day (see README). A story alerts only if ALL of these hold:
   1. Breadth: at least `min_outlets` different outlets reported it in the last `hours` hours.
   2. Size: Claude scores it at least `min_score` out of 10 against a strict front-page rubric.
   3. New: it broke within that window. It is not in this morning's brief, was not already
