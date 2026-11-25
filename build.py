@@ -308,6 +308,12 @@ def main():
                      "links": t.get("links", []), "summary": summary})
     OUT.mkdir(exist_ok=True)
     (OUT / "index.html").write_text(render(tabs, errors))
+    # Today's headlines, so alerts.py knows what is already in this morning's brief.
+    (OUT / "brief.json").write_text(json.dumps({
+        "updated": NOW.isoformat(),
+        "headlines": [t["summary"]["headline"] for t in tabs if (t["summary"] or {}).get("headline")]
+                     + [i["title"] for t in tabs for s in t["sections"] for i in s["items"]]},
+        ensure_ascii=False))
     total = sum(len(s["items"]) for t in tabs for s in t["sections"])
     note = notification(tabs, total)
     if os.environ.get("GITHUB_OUTPUT"):

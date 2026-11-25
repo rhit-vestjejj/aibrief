@@ -23,6 +23,12 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+      # alerts_state.json remembers sent alerts for 48 hours; the cache carries it between runs.
+      - uses: actions/cache/restore@v4
+        with:
+          path: alerts_state.json
+          key: alerts-state-${{ github.run_id }}
+          restore-keys: alerts-state-
       - name: Check for huge news
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -30,3 +36,8 @@ jobs:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           SITE_URL: ${{ vars.SITE_URL }}
         run: python3 alerts.py ${{ inputs.test && '--test' || '' }}
+      - uses: actions/cache/save@v4
+        if: always() && hashFiles('alerts_state.json') != ''
+        with:
+          path: alerts_state.json
+          key: alerts-state-${{ github.run_id }}
